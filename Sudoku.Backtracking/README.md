@@ -24,7 +24,7 @@ Ce solveur utilise **Python.NET** pour appeler un script Python qui résout un S
   - Utilisation d'un script Python pour exécuter le solveur .NET.
   - Exemple d'intégration inter-langages pour étendre les fonctionnalités.
 
-- **Code source** [`BacktrackingPythonDotNetSolver.cs`](Sudoku.Backtracking/BacktrackingPythonDotNetSolver.cs)
+- **Code source** [`BacktrackingPythonDotNetSolver.cs`](./BacktrackingPythonDotNetSolver.cs)
 
 - **Script Python**
   - [`SelfCallSolver.py`](./Resources/SelfCallSolver.py)
