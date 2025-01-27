@@ -72,8 +72,8 @@ execution = default_timer() - start
 
 # Affichez la solution ou un message d'échec
 
-if result:
-    # print("Sudoku résolu avec succès avec Z3 Solver:")
-    for row in result:
-        # print(row)
-    # print("Le temps de résolution est de : ", execution * 1000, "ms")
+# if result:
+#     print("Sudoku résolu avec succès avec Z3 Solver:")
+#     for row in result:
+#         print(row)
+#     print("Le temps de résolution est de : ", execution * 1000, "ms")
