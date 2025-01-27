@@ -5,6 +5,7 @@ Bienvenue sur le dépôt du TP Sudoku.....
 Listez ici la documentation qui accompagne vos solvers.
 
 ### [Solvers Backtracking](Sudoku.Backtracking/README.md)
+### [Solvers Z3](Sudoku.Z3Solvers/README.md)
 
 ## Instructions
 
