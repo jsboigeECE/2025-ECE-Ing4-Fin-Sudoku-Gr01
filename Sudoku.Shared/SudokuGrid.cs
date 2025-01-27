@@ -394,6 +394,53 @@ namespace Sudoku.Shared
         }
 
         public int NbEmptyCells() => Cells.Cast<int>().Count(c => c == 0);
-        
+
+
+
+
+
+
+       public void Afficher()
+{
+    var lineSep = new string('-', 31);
+    var blankSep = new string(' ', 8);
+
+    for (int row = 1; row <= 9; row++)
+    {
+        Console.Write("| ");
+        for (int column = 1; column <= 9; column++)
+        {
+            var value = Cells[row - 1, column - 1];
+            Console.Write(value);
+            if (column % 3 == 0)
+            {
+                Console.Write(" | ");
+            }
+            else
+            {
+                Console.Write("  ");
+            }
+        }
+
+        Console.WriteLine();
+        if (row % 3 == 0)
+        {
+            Console.WriteLine(lineSep);
+        }
+        else
+        {
+            Console.Write("| ");
+            for (int i = 0; i < 3; i++)
+            {
+                Console.Write(blankSep);
+                Console.Write("| ");
+            }
+        }
+
+        Console.WriteLine();
     }
+}
+ 
+    }
+    
 }
