@@ -18,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.GabrielOscar", "Sudoku.GabrielOscar\Sudoku.GabrielOscar.csproj", "{2D99BFAF-A85F-4641-B3B7-CBCCF3CC6C89}"
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.recuit_simule", "Sudoku.recuit_simule\Sudoku.recuit_simule.csproj", "{5C0CBA12-B520-4202-BB10-DF3F02677DC9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sudoku.PyGadSolver", "sudoku.PyGadSolver\sudoku.PyGadSolver.csproj", "{AE206AB6-773F-4031-B7FC-8797D2948E90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{5C0CBA12-B520-4202-BB10-DF3F02677DC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C0CBA12-B520-4202-BB10-DF3F02677DC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C0CBA12-B520-4202-BB10-DF3F02677DC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE206AB6-773F-4031-B7FC-8797D2948E90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE206AB6-773F-4031-B7FC-8797D2948E90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE206AB6-773F-4031-B7FC-8797D2948E90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE206AB6-773F-4031-B7FC-8797D2948E90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
