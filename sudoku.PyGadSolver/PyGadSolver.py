@@ -19,7 +19,8 @@ if 'instance' not in locals():
 # Indices des cellules fixes
 fixed_indices = np.argwhere(instance > 0)
 
-def fitness_function(solution, solution_idx):
+# Fonction de fitness (doit accepter 3 paramètres)
+def fitness_function(ga_instance, solution, solution_idx):
     """Évalue la qualité d'une solution Sudoku."""
     grid = instance.copy()
     variable_indices = np.argwhere(grid == 0)
@@ -38,11 +39,13 @@ def fitness_function(solution, solution_idx):
             block = grid[row:row + 3, col:col + 3].flatten()
             score += len(np.unique(block))
 
-    return -((243 - score) // 2)  # Nombre d'erreurs inversé
+    return score
 
+# Callback pour afficher les progrès à chaque génération
 def on_generation(ga_instance):
     """Affiche les progrès après chaque génération."""
-    print(f"Generation = {ga_instance.generations_completed}, Fitness = {ga_instance.best_solution()[1]}")
+    best_solution, best_fitness, _ = ga_instance.best_solution()
+    print(f"Generation = {ga_instance.generations_completed}, Best Fitness = {best_fitness}")
 
 # Indices des cellules variables
 variable_indices = np.argwhere(instance == 0)
@@ -55,10 +58,10 @@ start = default_timer()
 
 # Configuration de l'algorithme génétique
 ga_instance = pygad.GA(
-    num_generations=100,  # Nombre de générations
+    num_generations=500,  # Nombre de générations
     num_parents_mating=50,  # Parents sélectionnés
     fitness_func=fitness_function,  # Fonction de fitness
-    sol_per_pop=1000,  # Taille de la population
+    sol_per_pop=100,  # Taille de la population
     num_genes=len(variable_indices),  # Nombre de gènes (cellules non fixes)
     gene_space=gene_space,  # Valeurs possibles des gènes
     parent_selection_type="sss",  # Stochastic Universal Sampling
