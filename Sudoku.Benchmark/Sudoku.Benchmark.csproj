@@ -15,8 +15,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\sudoku.PyGadSolver\sudoku.PyGadSolver.csproj" />
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
     <ProjectReference Include="..\Sudoku.Backtracking\Sudoku.Backtracking.csproj" />
+    <ProjectReference Include="..\Sudoku.Z3Solvers\Sudoku.PyGadSolver.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
