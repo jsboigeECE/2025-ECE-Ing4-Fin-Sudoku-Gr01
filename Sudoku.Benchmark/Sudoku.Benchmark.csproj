@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../SudokuJulien/SudokuJulien.csproj" />
+    <ProjectReference Include="..\Sudoku.LinqToZ3Solvers\Sudoku.LinqToZ3Solvers.csproj" />
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
     <ProjectReference Include="..\Sudoku.Backtracking\Sudoku.Backtracking.csproj" />
     <ProjectReference Include="..\Sudoku.YicesSolvers\Sudoku.YicesSolvers.csproj" />
