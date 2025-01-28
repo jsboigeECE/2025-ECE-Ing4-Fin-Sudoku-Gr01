@@ -31,7 +31,7 @@ public class PyGadSolver : PythonSolverBase
 				string code = System.IO.File.ReadAllText("PyGadSolver.py");
 				scope.Exec(code);
 
-				PyObject result = scope.Get("result");
+				PyObject result = scope.Get("solved_grid");
 
 				// Convertissez le résultat NumPy en tableau .NET
 				var managedResult = AsManagedArray(scope, result);
