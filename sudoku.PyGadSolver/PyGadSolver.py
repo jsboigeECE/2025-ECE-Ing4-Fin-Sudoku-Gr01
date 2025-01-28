@@ -19,7 +19,7 @@ instance = np.array([
 # Indices des cellules fixes
 fixed_indices = np.argwhere(instance > 0)
 
-# Fonction de fitness avec une composante "recuit simulé" intégrée
+# Fonction de fitness améliorée pour HGASA
 def fitness_function(ga_instance, solution, solution_idx):
     """Évalue la qualité d'une solution Sudoku."""
     grid = instance.copy()
@@ -39,14 +39,41 @@ def fitness_function(ga_instance, solution, solution_idx):
             block = grid[row:row + 3, col:col + 3].flatten()
             score += len(np.unique(block))
 
-    # Composante de "recuit simulé": pénaliser les solutions non valides
-    penalty = np.count_nonzero(grid == 0)  # Penalité pour les cases vides
+    # Pénalité pour les doublons
+    penalty = 243 - score  # 243 est le score maximum (9 * 27 contraintes Sudoku)
+
     return score - penalty
+
+# Recuit simulé appliqué après chaque génération
+def simulated_annealing(solution, grid):
+    """Applique le recuit simulé pour raffiner une solution."""
+    variable_indices = np.argwhere(grid == 0)
+    temperature = 100
+    best_solution = solution.copy()
+    best_score = fitness_function(None, best_solution, None)
+
+    while temperature > 0.1:
+        new_solution = best_solution.copy()
+        idx = random.choice(range(len(variable_indices)))
+        new_solution[idx] = random.randint(1, 9)
+
+        new_score = fitness_function(None, new_solution, None)
+        if new_score > best_score or random.random() < np.exp((new_score - best_score) / temperature):
+            best_solution = new_solution
+            best_score = new_score
+
+        temperature *= 0.95
+
+    return best_solution
 
 # Callback pour afficher les progrès après chaque génération
 def on_generation(ga_instance):
     best_solution, best_solution_fitness, _ = ga_instance.best_solution()
     print(f"Generation = {ga_instance.generations_completed}, Best Fitness = {best_solution_fitness}")
+
+    # Appliquer le recuit simulé au meilleur individu
+    refined_solution = simulated_annealing(best_solution, instance.copy())
+    ga_instance.population[0] = refined_solution  # Remplace le meilleur individu
 
 # Indices des cellules variables
 variable_indices = np.argwhere(instance == 0)
@@ -57,8 +84,7 @@ gene_space = list(range(1, 10))
 # Lancement du timer
 start = default_timer()
 
-# Configuration de l'algorithme génétique
-# Paramètres ajustés pour un hybride GA + Recuit Simulé
+# Configuration de l'algorithme génétique avec intégration du recuit simulé
 ga_instance = pygad.GA(
     num_generations=200,
     num_parents_mating=20,
