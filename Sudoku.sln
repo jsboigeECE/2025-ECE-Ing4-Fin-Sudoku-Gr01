@@ -15,6 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SudokuJulien", "SudokuJulie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.YicesSolvers", "Sudoku.YicesSolvers\Sudoku.YicesSolvers.csproj", "{40A429AA-9ABC-4604-B808-494681B8279C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChocoSimpleSolvers", "ChocoSimpleSolvers\ChocoSimpleSolvers.csproj", "{82E61EA2-1DA3-4229-8155-562EED892B14}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +47,10 @@ Global
 		{40A429AA-9ABC-4604-B808-494681B8279C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40A429AA-9ABC-4604-B808-494681B8279C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40A429AA-9ABC-4604-B808-494681B8279C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82E61EA2-1DA3-4229-8155-562EED892B14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82E61EA2-1DA3-4229-8155-562EED892B14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82E61EA2-1DA3-4229-8155-562EED892B14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82E61EA2-1DA3-4229-8155-562EED892B14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
