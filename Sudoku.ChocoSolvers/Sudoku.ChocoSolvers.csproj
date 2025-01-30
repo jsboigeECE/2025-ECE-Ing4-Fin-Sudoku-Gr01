@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="IKVM" Version="8.11.0-pre.2" />
+    <PackageReference Include="IKVM.Image" Version="8.11.0-pre.2" />
+    <PackageReference Include="IKVM.Image.JDK" Version="8.11.0-pre.2" />
+    <PackageReference Include="IKVM.Image.JRE" Version="8.11.0-pre.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <IkvmReference Include=".\ChocoJava\choco-parsers-4.10.14-light.jar" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
   </ItemGroup>
 
