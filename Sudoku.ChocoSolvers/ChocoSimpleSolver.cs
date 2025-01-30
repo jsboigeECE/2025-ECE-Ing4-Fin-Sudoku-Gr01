@@ -1,11 +1,12 @@
 ﻿using Sudoku.Shared;
 using System;
 using org.chocosolver.solver;
+using org.chocosolver.solver.constraints;
 using org.chocosolver.solver.variables;
 
 namespace Sudoku.ChocoSolvers
 {
-    public class ChocoSolver : ISudokuSolver
+    public class ChocoSimpleSolver : ISudokuSolver
     {
         public SudokuGrid Solve(SudokuGrid s)
         {
@@ -18,11 +19,17 @@ namespace Sudoku.ChocoSolvers
             var model = new Model("Sudoku Solver");
             var cellVariables = model.intVarMatrix("cells", 9, 9, 1, 9);
 
+            var constraints = new List<Constraint>();
+            Constraint currentConstraint;
             // Contraintes pour les lignes et les colonnes
             for (int i = 0; i < 9; i++)
             {
-                model.allDifferent(cellVariables[i]).post(); // Lignes
-                model.allDifferent(GetColumn(cellVariables, i)).post(); // Colonnes
+	            // Lignes
+				currentConstraint = model.allDifferent(cellVariables[i]); 
+                constraints.Add(currentConstraint);
+                // Colonnes
+				currentConstraint = model.allDifferent(GetColumn(cellVariables, i));
+                constraints.Add(currentConstraint);
             }
 
             // Contraintes pour les blocs 3x3
@@ -30,7 +37,8 @@ namespace Sudoku.ChocoSolvers
             {
                 for (int blockCol = 0; blockCol < 3; blockCol++)
                 {
-                    model.allDifferent(GetBlock(cellVariables, blockRow, blockCol)).post();
+	                currentConstraint = model.allDifferent(GetBlock(cellVariables, blockRow, blockCol));
+					constraints.Add(currentConstraint);
                 }
             }
 
@@ -41,13 +49,16 @@ namespace Sudoku.ChocoSolvers
                 {
                     if (s.Cells[row, col] != 0)
                     {
-                        model.arithm(cellVariables[row][col], "=", s.Cells[row, col]).post();
+	                    currentConstraint = model.arithm(cellVariables[row][col], "=", s.Cells[row, col]);
+						constraints.Add(currentConstraint);
+						
                     }
                 }
             }
 
             // Résolution du modèle
-            var solver = model.getSolver();
+           
+			 var solver = GetSolver(model, cellVariables, constraints);
             if (solver.solve())
             {
                 // Remplissage du SudokuGrid avec la solution trouvée
@@ -61,8 +72,20 @@ namespace Sudoku.ChocoSolvers
             }
         }
 
-        // Méthodes auxiliaires pour récupérer colonnes et blocs
-        private IntVar[] GetColumn(IntVar[][] grid, int col)
+        public virtual Solver GetSolver(Model model, IntVar[][] cellVariables, List<Constraint> constraints)
+        {
+			var solver = model.getSolver();
+			
+			foreach (var constraint in constraints)
+			{
+				constraint.post();
+			}
+
+			return solver;
+        }
+
+		// Méthodes auxiliaires pour récupérer colonnes et blocs
+		private IntVar[] GetColumn(IntVar[][] grid, int col)
         {
             return Enumerable.Range(0, 9).Select(row => grid[row][col]).ToArray();
         }
@@ -74,5 +97,7 @@ namespace Sudoku.ChocoSolvers
                 .Select(j => grid[blockRow * 3 + i][blockCol * 3 + j]))
                 .ToArray();
         }
-    }
+
+       
+	}
 }
