@@ -15,27 +15,43 @@ namespace Sudoku.recuit_simule
 
             // 2) Paramètres du recuit simulé
             double temperatureInitiale = 2.0;
-            double alpha = 0.99;
-            int nbIterations = 200000;
-
+            double alpha = 0.995;
+            int nbIterations = 2000000;
+            
             // 3) Lancer l'algo de recuit simulé
-            var (solutionTrouvee, coutFinal) = RecuitSimuleSudoku(grilleBase, temperatureInitiale, alpha, nbIterations);
+            //    On fixe un seuil de stagnation (exemple : 3000) pour le random restart
+            var (solutionTrouvee, coutFinal, iterationsEffectuees) = RecuitSimuleSudoku(
+                grilleBase,
+                temperatureInitiale,
+                alpha,
+                nbIterations,
+                seuilStagnation: 3000
+            );
 
             // 4) Reconstruire un SudokuGrid depuis la solution
             SudokuGrid solvedGrid = ArrayToSudokuGrid(solutionTrouvee);
 
-            // Optionnel : afficher le coût final
-            Console.WriteLine($"Recuit terminé. Coût final : {coutFinal}");
-
+            // Afficher le coût final et le nombre d'itérations
+            Console.WriteLine($"Recuit terminé après {iterationsEffectuees} itérations. Coût final : {coutFinal}");
+            
             return solvedGrid;
         }
 
         /// <summary>
-        /// Algorithme principal de recuit simulé pour Sudoku.
+        /// Algorithme principal de recuit simulé pour Sudoku, 
+        /// avec mécanisme de "restart" en cas de stagnation,
+        /// et arrêt immédiat quand le coût = 0.
+        /// Retourne également le nombre d'itérations effectuées.
         /// </summary>
-        private (int[,], int) RecuitSimuleSudoku(int[,] grilleBase, double tempInitiale, double alpha, int nbIterations)
+        private (int[,], int, int) RecuitSimuleSudoku(
+            int[,] grilleBase,
+            double tempInitiale,
+            double alpha,
+            int nbIterations,
+            int seuilStagnation
+        )
         {
-            // Générer une solution initiale avec moins de conflits
+            // Générer une solution initiale
             int[,] solutionCourante = GenererSolutionInitiale(grilleBase);
             int coutCourant = CalculerCout(solutionCourante);
 
@@ -45,17 +61,22 @@ namespace Sudoku.recuit_simule
 
             double T = tempInitiale;
 
-            // Pour implémenter un random restart simple
+            // Pour détecter la stagnation
             int iterationsSansAmelioration = 0;
-            int seuilRedemarrage = 5000; // Ajustez selon vos besoins
 
-            // Boucle d'itérations
-            for (int iteration = 0; iteration < nbIterations; iteration++)
+            // Variable pour suivre l'index d'itération
+            int iteration = 0;
+
+            for (iteration = 0; iteration < nbIterations; iteration++)
             {
+                // Vérification immédiate : si on a déjà coût 0, on s'arrête
                 if (coutCourant == 0)
+                {
+                    Console.WriteLine($"Sudoku résolu à l'itération {iteration} !");
                     break;
+                }
 
-                // Générer un voisin par swap
+                // Générer un voisin
                 int[,] solutionVoisin = ChoisirVoisin(solutionCourante, grilleBase);
                 int coutVoisin = CalculerCout(solutionVoisin);
 
@@ -63,51 +84,55 @@ namespace Sudoku.recuit_simule
 
                 if (delta < 0)
                 {
-                    // Amélioration : on accepte
+                    // Amélioration
                     solutionCourante = solutionVoisin;
                     coutCourant = coutVoisin;
-                    iterationsSansAmelioration = 0; // on réinitialise le compteur
                 }
                 else
                 {
-                    // Dégradation : on accepte parfois
+                    // Dégradation : acceptation avec probabilité exp(-delta / T)
                     double prob = Math.Exp(-delta / T);
                     if (rand.NextDouble() < prob)
                     {
                         solutionCourante = solutionVoisin;
                         coutCourant = coutVoisin;
                     }
-                    else
-                    {
-                        iterationsSansAmelioration++;
-                    }
                 }
 
-                // MàJ du meilleur état connu
+                // Mise à jour du meilleur état connu
                 if (coutCourant < meilleurCout)
                 {
                     meilleurCout = coutCourant;
                     meilleureSolution = CopierGrille(solutionCourante);
+                    iterationsSansAmelioration = 0; // on réinitialise la stagnation
+                }
+                else
+                {
+                    // Sinon, on incrémente le nombre d'itérations sans amélioration
+                    iterationsSansAmelioration++;
                 }
 
-                // Diminution de la température
-                T *= alpha;
-
-                // Si on stagne trop longtemps, on relance une nouvelle solution
-                if (iterationsSansAmelioration > seuilRedemarrage)
+                // Si on stagne trop longtemps, on redémarre
+                if (iterationsSansAmelioration > seuilStagnation)
                 {
-                    // Random restart : on repart d'une nouvelle solution initiale
+                    Console.WriteLine("=== Redémarrage du recuit (stagnation détectée) ===");
                     solutionCourante = GenererSolutionInitiale(grilleBase);
                     coutCourant = CalculerCout(solutionCourante);
                     iterationsSansAmelioration = 0;
                 }
+
+                // Diminution de la température
+                T *= alpha;
             }
 
-            return (meilleureSolution, meilleurCout);
+            // On sort de la boucle : iteration est soit < nbIterations (si break), soit = nbIterations (si on n'a pas résolu à temps)
+            int iterationsEffectuees = iteration; 
+
+            return (meilleureSolution, meilleurCout, iterationsEffectuees);
         }
 
         /// <summary>
-        /// Génère une solution initiale plus structurée
+        /// Génère une solution initiale plus "propre"
         /// en remplissant chaque ligne avec les chiffres manquants.
         /// </summary>
         private int[,] GenererSolutionInitiale(int[,] grilleBase)
@@ -139,7 +164,7 @@ namespace Sudoku.recuit_simule
                 // On mélange (shuffle) les chiffres manquants
                 Shuffle(missing);
 
-                // On remplit les cases vides de la ligne avec les chiffres manquants dans le désordre
+                // On remplit les cases vides de la ligne avec les chiffres manquants
                 int indexMissing = 0;
                 for (int col = 0; col < 9; col++)
                 {
@@ -155,7 +180,8 @@ namespace Sudoku.recuit_simule
         }
 
         /// <summary>
-        /// Génère un voisin en échangeant deux cases libres dans la même ligne OU le même bloc 3x3.
+        /// Génère un voisin en échangeant deux cases libres 
+        /// dans la même ligne OU dans le même bloc 3x3.
         /// </summary>
         private int[,] ChoisirVoisin(int[,] solutionCourante, int[,] grilleBase)
         {
@@ -164,7 +190,6 @@ namespace Sudoku.recuit_simule
             bool echangeEffectue = false;
             int tentative = 0;
 
-            // On essaie plusieurs fois jusqu’à trouver 2 cases libres à échanger
             while (!echangeEffectue && tentative < 50)
             {
                 // Décider aléatoirement de faire un swap dans une ligne ou un bloc
@@ -175,7 +200,7 @@ namespace Sudoku.recuit_simule
                     // Choisir une ligne au hasard
                     int row = rand.Next(0, 9);
 
-                    // Récupérer les positions libres (non données) de cette ligne
+                    // Récupérer les positions libres de cette ligne
                     List<int> freeCols = new List<int>();
                     for (int c = 0; c < 9; c++)
                     {
@@ -208,12 +233,11 @@ namespace Sudoku.recuit_simule
                     int blockRow = rand.Next(0, 3); // 0 à 2
                     int blockCol = rand.Next(0, 3);
 
-                    // Déterminer les lignes/colonnes exactes
                     int startRow = blockRow * 3;
                     int startCol = blockCol * 3;
 
-                    // Récupérer les positions libres (non données) dans ce bloc
-                    List<(int r, int c)> freeCells = new List<(int, int)>();
+                    // Récupérer les positions libres dans ce bloc
+                    List<(int r, int c)> freeCells = new List<(int r, int c)>();
                     for (int i = 0; i < 3; i++)
                     {
                         for (int j = 0; j < 3; j++)
@@ -254,7 +278,8 @@ namespace Sudoku.recuit_simule
         }
 
         /// <summary>
-        /// Calcul du "coût" : nombre total de conflits dans lignes, colonnes et blocs.
+        /// Calcul du "coût" : nombre total de conflits 
+        /// dans lignes, colonnes et blocs 3x3.
         /// </summary>
         private int CalculerCout(int[,] solution)
         {
@@ -340,7 +365,6 @@ namespace Sudoku.recuit_simule
         /// </summary>
         private int[,] SudokuGridToArray(SudokuGrid s)
         {
-            // Crée un tableau 2D pour stocker les valeurs
             int[,] array = new int[9, 9];
 
             for (int row = 0; row < 9; row++)
@@ -379,7 +403,6 @@ namespace Sudoku.recuit_simule
             for (int i = 0; i < list.Count; i++)
             {
                 int j = rand.Next(i, list.Count);
-                // Échange
                 T temp = list[i];
                 list[i] = list[j];
                 list[j] = temp;
