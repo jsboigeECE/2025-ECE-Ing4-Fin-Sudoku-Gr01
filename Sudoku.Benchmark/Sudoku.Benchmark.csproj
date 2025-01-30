@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Sudoku.ChocoSolvers\Sudoku.ChocoSolvers.csproj" />
     <ProjectReference Include="..\sudoku.PyGadSolver\sudoku.PyGadSolver.csproj" />
     <ProjectReference Include="../SudokuJulien/SudokuJulien.csproj" />
     <ProjectReference Include="..\Sudoku.GabrielOscar\Sudoku.GabrielOscar.csproj" />
