@@ -15,11 +15,13 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Sudoku.ChocoSolvers\Sudoku.ChocoSolvers.csproj" />
     <ProjectReference Include="..\sudoku.PyGadSolver\sudoku.PyGadSolver.csproj" />
     <ProjectReference Include="../SudokuJulien/SudokuJulien.csproj" />
     <ProjectReference Include="..\Sudoku.GabrielOscar\Sudoku.GabrielOscar.csproj" />
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
     <ProjectReference Include="..\Sudoku.Backtracking\Sudoku.Backtracking.csproj" />
+    <ProjectReference Include="..\Sudoku.SMTZ3\Sudoku.SMTZ3.csproj" />
     <ProjectReference Include="..\Sudoku.YicesSolvers\Sudoku.YicesSolvers.csproj" />
     <ProjectReference Include="..\Sudoku.Z3Solvers\Sudoku.Z3Solvers.csproj" />
     <ProjectReference Include="..\Sudoku.recuit_simule\Sudoku.recuit_simule.csproj" />
