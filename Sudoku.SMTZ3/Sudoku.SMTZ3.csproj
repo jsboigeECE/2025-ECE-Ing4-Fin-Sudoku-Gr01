@@ -14,4 +14,11 @@
     <PackageReference Include="Microsoft.Z3" Version="4.12.2" />
   </ItemGroup>
 
+   <!-- Ajout du script Python à la sortie de compilation -->
+  <ItemGroup>
+    <None Update="BacktrackingPythonSMTZ3.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
