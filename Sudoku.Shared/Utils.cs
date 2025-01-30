@@ -27,15 +27,37 @@ namespace Sudoku.Shared
             return toReturn;
         }
 
-        public static T[] Flatten<T>(this T[][] source)
-        {
-            return source.SelectMany(x => x).ToArray();
-        }
+		public static T[] Flatten<T>(this T[][] source)
+		{
+			return source.SelectMany(x => x).ToArray();
+		}
 
-        /// <summary>
-        ///   Converts a jagged array into a multidimensional array.
-        /// </summary>
-        public static T[,] To2D<T>(this T[][] source)
+		public static T[] Flatten<T>(this T[,] source)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+
+			int rows = source.GetLength(0);
+			int cols = source.GetLength(1);
+			T[] flattened = new T[rows * cols];
+
+			int index = 0;
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < cols; j++)
+				{
+					flattened[index++] = source[i, j];
+				}
+			}
+
+			return flattened;
+		}
+
+
+		/// <summary>
+		///   Converts a jagged array into a multidimensional array.
+		/// </summary>
+		public static T[,] To2D<T>(this T[][] source)
         {
             try
             {
