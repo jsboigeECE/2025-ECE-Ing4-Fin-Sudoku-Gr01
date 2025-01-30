@@ -1,83 +1,78 @@
 ﻿using Sudoku.Shared;
 using System;
+using org.chocosolver.solver;
 using org.chocosolver.solver.variables;
 
-namespace Sudoku.ChocoSolvers;
-
-// Je garde votre classe initiale, mais vous serez amenés à encréer plusieurs, typiquement héritant d'une classe de base et changeant les nombreux paramètres disponibles
-public class ChocoSolver : ISudokuSolver
+namespace Sudoku.ChocoSolvers
 {
-    public SudokuGrid Solve(SudokuGrid s)
+    public class ChocoSolver : ISudokuSolver
     {
-      
-        
-        // Résoudre avec Choco Solver
-         ResoudreSudokuBacktracking(s.Cells);
-         return s;
-
-    }
-
-
-    private void ResoudreSudokuChocoSolver(SudokuGrid s)
-    {
-        // Je fais juste l'amorce pour vous montrer où vous pouvez trouver le code de Choco. Le reste sera dans la doc
-	    var model = new org.chocosolver.solver.Model();
-	    var cellVariables = model.intVarMatrix(9, 9, 1, 9);
-		// cf la doc pour la suite:
-		// https://choco-solver.org/docs/modeling/intconstraints/
-		// cf par exemple https://choco-solver.org/docs/solving/strategies/
-		// https://choco-solver.org/docs/advanced-usages/strategies/
-		//https://choco-solver.org/docs/solving/lns/
-    }
-
-
-
-	// Je laisse votre ancien code que j'ai juste simplifié, mais vous pourrez l'enlever
-	private bool ResoudreSudokuBacktracking(int[,] grid)
-    {
-        for (int row = 0; row < 9; row++)
+        public SudokuGrid Solve(SudokuGrid s)
         {
-            for (int col = 0; col < 9; col++)
+            ResoudreSudokuChocoSolver(s);
+            return s;
+        }
+
+        private void ResoudreSudokuChocoSolver(SudokuGrid s)
+        {
+            var model = new Model("Sudoku Solver");
+            var cellVariables = model.intVarMatrix("cells", 9, 9, 1, 9);
+
+            // Contraintes pour les lignes et les colonnes
+            for (int i = 0; i < 9; i++)
             {
-                if (grid[row, col] == 0)
+                model.allDifferent(cellVariables[i]).post(); // Lignes
+                model.allDifferent(GetColumn(cellVariables, i)).post(); // Colonnes
+            }
+
+            // Contraintes pour les blocs 3x3
+            for (int blockRow = 0; blockRow < 3; blockRow++)
+            {
+                for (int blockCol = 0; blockCol < 3; blockCol++)
                 {
-                    for (int num = 1; num <= 9; num++)
+                    model.allDifferent(GetBlock(cellVariables, blockRow, blockCol)).post();
+                }
+            }
+
+            // Appliquer les valeurs initiales du Sudoku
+            for (int row = 0; row < 9; row++)
+            {
+                for (int col = 0; col < 9; col++)
+                {
+                    if (s.Cells[row, col] != 0)
                     {
-                        if (EstValide(grid, row, col, num))
-                        {
-                            grid[row, col] = num;
-                            if (ResoudreSudokuBacktracking(grid))
-                                return true;
-                            grid[row, col] = 0;
-                        }
+                        model.arithm(cellVariables[row][col], "=", s.Cells[row, col]).post();
                     }
-                    return false;
+                }
+            }
+
+            // Résolution du modèle
+            var solver = model.getSolver();
+            if (solver.solve())
+            {
+                // Remplissage du SudokuGrid avec la solution trouvée
+                for (int row = 0; row < 9; row++)
+                {
+                    for (int col = 0; col < 9; col++)
+                    {
+                        s.Cells[row, col] = cellVariables[row][col].getValue();
+                    }
                 }
             }
         }
-        return true;
-    }
 
-    private bool EstValide(int[,] grid, int row, int col, int num)
-    {
-        for (int i = 0; i < 9; i++)
+        // Méthodes auxiliaires pour récupérer colonnes et blocs
+        private IntVar[] GetColumn(IntVar[][] grid, int col)
         {
-            if (grid[row, i] == num || grid[i, col] == num)
-                return false;
+            return Enumerable.Range(0, 9).Select(row => grid[row][col]).ToArray();
         }
-        
-        int startRow = (row / 3) * 3;
-        int startCol = (col / 3) * 3;
-        for (int i = 0; i < 3; i++)
+
+        private IntVar[] GetBlock(IntVar[][] grid, int blockRow, int blockCol)
         {
-            for (int j = 0; j < 3; j++)
-            {
-                if (grid[startRow + i, startCol + j] == num)
-                    return false;
-            }
+            return Enumerable.Range(0, 3)
+                .SelectMany(i => Enumerable.Range(0, 3)
+                .Select(j => grid[blockRow * 3 + i][blockCol * 3 + j]))
+                .ToArray();
         }
-        
-        return true;
     }
-	
 }
