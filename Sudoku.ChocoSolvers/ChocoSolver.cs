@@ -1,38 +1,39 @@
 ﻿using Sudoku.Shared;
 using System;
+using org.chocosolver.solver.variables;
 
 namespace Sudoku.ChocoSolvers;
 
+// Je garde votre classe initiale, mais vous serez amenés à encréer plusieurs, typiquement héritant d'une classe de base et changeant les nombreux paramètres disponibles
 public class ChocoSolver : ISudokuSolver
 {
     public SudokuGrid Solve(SudokuGrid s)
     {
-        // Convertir la grille en tableau
-        int[,] sudokuArray = SudokuGridToArray(s);
+      
         
         // Résoudre avec Choco Solver
-        int[,] solutionArray = SolveWithChoco(sudokuArray);
-        
-        // Convertir la solution en SudokuGrid
-        return ArrayToSudokuGrid(solutionArray);
+         ResoudreSudokuBacktracking(s.Cells);
+         return s;
+
     }
 
-    private int[,] SolveWithChoco(int[,] sudoku)
+
+    private void ResoudreSudokuChocoSolver(SudokuGrid s)
     {
-        int[,] solution = CopierGrille(sudoku);
-        
-        // Appliquer un algorithme de backtracking simple
-        if (ResoudreSudoku(solution))
-        {
-            return solution;
-        }
-        else
-        {
-            throw new Exception("Pas de solution trouvée");
-        }
+        // Je fais juste l'amorce pour vous montrer où vous pouvez trouver le code de Choco. Le reste sera dans la doc
+	    var model = new org.chocosolver.solver.Model();
+	    var cellVariables = model.intVarMatrix(9, 9, 1, 9);
+		// cf la doc pour la suite:
+		// https://choco-solver.org/docs/modeling/intconstraints/
+		// cf par exemple https://choco-solver.org/docs/solving/strategies/
+		// https://choco-solver.org/docs/advanced-usages/strategies/
+		//https://choco-solver.org/docs/solving/lns/
     }
 
-    private bool ResoudreSudoku(int[,] grid)
+
+
+	// Je laisse votre ancien code que j'ai juste simplifié, mais vous pourrez l'enlever
+	private bool ResoudreSudokuBacktracking(int[,] grid)
     {
         for (int row = 0; row < 9; row++)
         {
@@ -45,7 +46,7 @@ public class ChocoSolver : ISudokuSolver
                         if (EstValide(grid, row, col, num))
                         {
                             grid[row, col] = num;
-                            if (ResoudreSudoku(grid))
+                            if (ResoudreSudokuBacktracking(grid))
                                 return true;
                             grid[row, col] = 0;
                         }
@@ -78,43 +79,5 @@ public class ChocoSolver : ISudokuSolver
         
         return true;
     }
-
-    private int[,] CopierGrille(int[,] source)
-    {
-        int[,] copie = new int[9, 9];
-        for (int r = 0; r < 9; r++)
-        {
-            for (int c = 0; c < 9; c++)
-            {
-                copie[r, c] = source[r, c];
-            }
-        }
-        return copie;
-    }
-
-    private int[,] SudokuGridToArray(SudokuGrid s)
-    {
-        int[,] array = new int[9, 9];
-        for (int i = 0; i < 9; i++)
-        {
-            for (int j = 0; j < 9; j++)
-            {
-                array[i, j] = s.Cells[i, j];
-            }
-        }
-        return array;
-    }
-
-    private SudokuGrid ArrayToSudokuGrid(int[,] array)
-    {
-        SudokuGrid s = new SudokuGrid();
-        for (int i = 0; i < 9; i++)
-        {
-            for (int j = 0; j < 9; j++)
-            {
-                s.Cells[i, j] = array[i, j];
-            }
-        }
-        return s;
-    }
+	
 }
