@@ -4,13 +4,16 @@ using Google.OrTools.ConstraintSolver;
 
 namespace SudokuJulien;
 
-public class ORToolsLegacyCPSolver2 : ISudokuSolver
+public class ORToolsLegacyCPRandomSolver() : ORToolsLegacyCPSolverBase(SearchStrategy.Random);
+public class ORToolsLegacyCPFirstFailSolver() : ORToolsLegacyCPSolverBase(SearchStrategy.FirstFail);
+public class ORToolsLegacyCPSimpleSolver() : ORToolsLegacyCPSolverBase(SearchStrategy.Simple);
+
+public abstract class ORToolsLegacyCPSolverBase : ISudokuSolver
 {
     private readonly SearchStrategy _strategy;
 
-    public ORToolsLegacyCPSolver2() : this(SearchStrategy.Random) {}
 
-    public ORToolsLegacyCPSolver2(SearchStrategy strategy)
+    public ORToolsLegacyCPSolverBase(SearchStrategy strategy)
     {
         _strategy = strategy;
     }
@@ -20,20 +23,19 @@ public class ORToolsLegacyCPSolver2 : ISudokuSolver
         Solver solver = new Solver("Sudoku");
 
         // Déclaration des variables : une matrice jagged pour les cellules du Sudoku
-        IntVar[][] cells = new IntVar[9][];
+        IntVar[,] cells = new IntVar[9,9];
         for (int i = 0; i < 9; i++)
         {
-            cells[i] = new IntVar[9];
             for (int j = 0; j < 9; j++)
             {
-                cells[i][j] = solver.MakeIntVar(1, 9, $"cell_{i}_{j}");
+                cells[i,j] = solver.MakeIntVar(1, 9, $"cell_{i}_{j}");
             }
         }
 
         // Contraintes de lignes : chaque ligne doit contenir des valeurs différentes
         for (int i = 0; i < 9; i++)
         {
-            solver.Add(solver.MakeAllDifferent(cells[i]));
+            solver.Add(solver.MakeAllDifferent(Enumerable.Range(0, 9).Select(j => cells[i, j]).ToArray()));
         }
 
         // Contraintes de colonnes : chaque colonne doit contenir des valeurs différentes
@@ -42,7 +44,7 @@ public class ORToolsLegacyCPSolver2 : ISudokuSolver
             IntVar[] column = new IntVar[9];
             for (int i = 0; i < 9; i++)
             {
-                column[i] = cells[i][j];
+                column[i] = cells[i,j];
             }
             solver.Add(solver.MakeAllDifferent(column));
         }
@@ -58,7 +60,7 @@ public class ORToolsLegacyCPSolver2 : ISudokuSolver
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        subGrid[index++] = cells[startRow + i][startCol + j];
+                        subGrid[index++] = cells[startRow + i,startCol + j];
                     }
                 }
                 solver.Add(solver.MakeAllDifferent(subGrid));
@@ -72,7 +74,7 @@ public class ORToolsLegacyCPSolver2 : ISudokuSolver
             {
                 if (s.Cells[i, j] != 0)
                 {
-                    solver.Add(cells[i][j] == s.Cells[i, j]);
+                    solver.Add(cells[i,j] == s.Cells[i, j]);
                 }
             }
         }
@@ -88,7 +90,7 @@ public class ORToolsLegacyCPSolver2 : ISudokuSolver
             {
                 for (int j = 0; j < 9; j++)
                 {
-                    s.Cells[i, j] = (int)cells[i][j].Value();
+                    s.Cells[i, j] = (int)cells[i,j].Value();
                 }
             }
         }
@@ -101,7 +103,7 @@ public class ORToolsLegacyCPSolver2 : ISudokuSolver
         return s;
     }
 
-    private DecisionBuilder GetDecisionBuilder(Solver solver, IntVar[][] cells)
+    private DecisionBuilder GetDecisionBuilder(Solver solver, IntVar[,] cells)
     {
         switch (_strategy)
         {
