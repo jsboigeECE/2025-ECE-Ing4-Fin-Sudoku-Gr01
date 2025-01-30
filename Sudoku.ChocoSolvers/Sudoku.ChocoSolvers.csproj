@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IKVM" Version="8.11.0-pre.2" />
+    <PackageReference Include="IKVM" Version="8.10.3" />
     <PackageReference Include="IKVM.Image" Version="8.11.0-pre.2" />
     <PackageReference Include="IKVM.Image.JDK" Version="8.11.0-pre.2" />
     <PackageReference Include="IKVM.Image.JRE" Version="8.11.0-pre.2" />
@@ -20,5 +20,19 @@
   <ItemGroup>
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
   </ItemGroup>
+
+
+  <ItemGroup>
+    <Reference Include="IKVM">
+      <HintPath>$(NuGetPackageRoot)\ikvm\8.10.3\lib\IKVM.dll</HintPath>
+    </Reference>
+    <Reference Include="ChocoSolver">
+      <HintPath>choco-solver.jar</HintPath>
+      <AssemblyName>ChocoSolver</AssemblyName>
+      <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
+    </Reference>
+  </ItemGroup>
+
 
 </Project>
