@@ -4,21 +4,28 @@ using Google.OrTools.ConstraintSolver;
 
 namespace SudokuJulien;
 
-public class ORToolsLegacyCPSolver : ISudokuSolver
+public class ORToolsLegacyCPSolver2 : ISudokuSolver
 {
+    private readonly SearchStrategy _strategy;
+
+    public ORToolsLegacyCPSolver2() : this(SearchStrategy.Random) {}
+
+    public ORToolsLegacyCPSolver2(SearchStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
     public SudokuGrid Solve(SudokuGrid s)
     {
-        // Initialisation du modèle de contraintes
         Solver solver = new Solver("Sudoku");
 
-        // Déclaration des variables : une matrice de 9x9 pour les cellules du Sudoku
+        // Déclaration des variables : une matrice jagged pour les cellules du Sudoku
         IntVar[][] cells = new IntVar[9][];
         for (int i = 0; i < 9; i++)
         {
             cells[i] = new IntVar[9];
             for (int j = 0; j < 9; j++)
             {
-                // Chaque cellule peut prendre une valeur entre 1 et 9
                 cells[i][j] = solver.MakeIntVar(1, 9, $"cell_{i}_{j}");
             }
         }
@@ -70,14 +77,10 @@ public class ORToolsLegacyCPSolver : ISudokuSolver
             }
         }
 
-        // Résolution du modèle
-        DecisionBuilder db = solver.MakePhase(
-            cells.Flatten(), // Utilisation de Utils.Flatten pour aplatir le tableau
-            Solver.INT_VAR_SIMPLE, // Heuristique simple pour choisir les variables
-            Solver.INT_VALUE_SIMPLE // Heuristique simple pour choisir les valeurs
-        );
+        // Sélection de la stratégie de recherche
+        DecisionBuilder db = GetDecisionBuilder(solver, cells);
 
-        // Lance la recherche
+        // Résolution
         solver.NewSearch(db);
         if (solver.NextSolution())
         {
@@ -91,10 +94,42 @@ public class ORToolsLegacyCPSolver : ISudokuSolver
         }
         else
         {
-            throw new Exception("Aucune solution trouvée pour ce Sudoku.");
+            throw new Exception("Aucune solution trouvée.");
         }
         solver.EndSearch();
 
         return s;
     }
+
+    private DecisionBuilder GetDecisionBuilder(Solver solver, IntVar[][] cells)
+    {
+        switch (_strategy)
+        {
+            case SearchStrategy.FirstFail:
+                return solver.MakePhase(
+                    cells.Flatten(),
+                    Solver.CHOOSE_MIN_SIZE_LOWEST_MIN, // Similaire à "FirstFail"
+                    Solver.ASSIGN_MIN_VALUE);
+
+            case SearchStrategy.Random:
+                return solver.MakePhase(
+                    cells.Flatten(),
+                    Solver.CHOOSE_RANDOM, // Stratégie aléatoire
+                    Solver.ASSIGN_RANDOM_VALUE);
+
+            case SearchStrategy.Simple:
+            default:
+                return solver.MakePhase(
+                    cells.Flatten(),
+                    Solver.CHOOSE_FIRST_UNBOUND, // Choix par défaut
+                    Solver.ASSIGN_MIN_VALUE);
+        }
+    }
+}
+
+public enum SearchStrategy
+{
+    Simple,
+    FirstFail,
+    Random
 }
