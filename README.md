@@ -4,10 +4,10 @@ Bienvenue sur le dépôt du TP Sudoku.....
 
 Listez ici la documentation qui accompagne vos solvers.
 
-### [Solvers xxx](Sudoku.Xxx/README.md)
+### [Solvers Backtracking](Sudoku.Backtracking/README.md)
+### [Solvers Z3](Sudoku.Z3Solvers/README.md)
 
 ## Instructions
-
 
 Chaque groupe est invité à créer un [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) de ce dépôt principal muni d'un compte sur Github, et d'indiquer dans le fil de suivi de projet du groupe sur le forum son adresse. 
 
