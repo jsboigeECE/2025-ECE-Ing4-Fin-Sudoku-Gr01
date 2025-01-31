@@ -6,7 +6,7 @@ using Sudoku.Shared;
 
 namespace Sudoku.recuit_simule
 {
-    public class recuit_alpha_v2: ISudokuSolver
+    public class recuit_alpha_v2
     {
         private static readonly Random rand = new Random();
 
