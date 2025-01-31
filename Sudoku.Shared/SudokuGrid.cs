@@ -440,7 +440,36 @@ namespace Sudoku.Shared
         Console.WriteLine();
     }
 }
- 
+
+ public int[] GetRow(int rowIndex)
+{
+    if (rowIndex < 0 || rowIndex >= 9)
+        throw new ArgumentOutOfRangeException(nameof(rowIndex), "Row index must be between 0 and 8.");
+
+    int[] row = new int[9];
+    for (int i = 0; i < 9; i++)
+    {
+        row[i] = Cells[rowIndex, i];
+    }
+    return row;
+}
+public int[] GetBoxValues(int rowIndex, int colIndex)
+{
+    int boxRowStart = (rowIndex / 3) * 3;
+    int boxColStart = (colIndex / 3) * 3;
+    List<int> boxValues = new List<int>();
+
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            boxValues.Add(Cells[boxRowStart + i, boxColStart + j]);
+        }
+    }
+
+    return boxValues.ToArray();
+}
+
     }
     
 }
