@@ -4,7 +4,7 @@ using Sudoku.Shared;
 
 namespace Sudoku.Z3Solvers;
 
-public class Z3SimplePythonSolver : PythonSolverBase
+public class Z3SimplePythonSolver2 : PythonSolverBase
 
 {
 	public override Shared.SudokuGrid Solve(Shared.SudokuGrid s)
