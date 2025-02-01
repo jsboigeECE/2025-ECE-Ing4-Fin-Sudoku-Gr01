@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Sudoku.ChocoSolvers\Sudoku.ChocoSolvers.csproj" />
+    <ProjectReference Include="..\Sudoku.FaresPaulSolvers\Sudoku.FaresPaulSolvers.csproj" />
     <ProjectReference Include="..\sudoku.PyGadSolver\sudoku.PyGadSolver.csproj" />
     <ProjectReference Include="../SudokuJulien/SudokuJulien.csproj" />
     <ProjectReference Include="..\Sudoku.GabrielOscar\Sudoku.GabrielOscar.csproj" />
