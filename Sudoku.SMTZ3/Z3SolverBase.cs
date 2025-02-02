@@ -5,14 +5,12 @@ using Microsoft.Z3;
 namespace Sudoku.SMTZ3
 {
     /// <summary>
-    /// Classe de base qui implémente la création des variables et les contraintes communes
-    /// (domaine, lignes, colonnes, blocs 3x3).
-    /// Les solveurs spécifiques implémentent l’application des valeurs fixes via
-    /// la méthode abstraite AddInitialConstraints.
+    /// Classe de base pour les solveurs Z3 du Sudoku.
+    /// Elle crée les variables et ajoute les contraintes génériques (domaine, lignes, colonnes, blocs 3x3).
     /// </summary>
     public abstract class Z3SolverBase : ISudokuSolver
     {
-        public SudokuGrid Solve(SudokuGrid s)
+        public virtual SudokuGrid Solve(SudokuGrid s)
         {
             using (var context = new Context())
             {
@@ -25,16 +23,14 @@ namespace Sudoku.SMTZ3
                     for (int j = 0; j < 9; j++)
                     {
                         cells[i, j] = (IntExpr)context.MkIntConst($"cell_{i}_{j}");
-                        solver.Assert(
-                            context.MkAnd(
-                                context.MkLe(context.MkInt(1), cells[i, j]),
-                                context.MkLe(cells[i, j], context.MkInt(9))
-                            )
-                        );
+                        solver.Assert(context.MkAnd(
+                            context.MkLe(context.MkInt(1), cells[i, j]),
+                            context.MkLe(cells[i, j], context.MkInt(9))
+                        ));
                     }
                 }
 
-                // Application des valeurs fixes de la grille (spécifique au solver)
+                // Application des contraintes initiales spécifiques (par la classe dérivée)
                 AddInitialConstraints(s, context, solver, cells);
 
                 // Ajout des contraintes génériques : lignes, colonnes et blocs 3x3
@@ -61,13 +57,13 @@ namespace Sudoku.SMTZ3
         }
 
         /// <summary>
-        /// Permet d’appliquer les contraintes liées aux valeurs fixes de la grille.
-        /// Les classes dérivées doivent implémenter cette méthode.
+        /// Permet d'ajouter les contraintes pour les valeurs fixes.
+        /// Chaque classe dérivée doit implémenter cette méthode.
         /// </summary>
         protected abstract void AddInitialConstraints(SudokuGrid s, Context context, Solver solver, IntExpr[,] cells);
 
         /// <summary>
-        /// Ajoute les contraintes communes aux règles du Sudoku : lignes, colonnes, blocs.
+        /// Ajoute les contraintes communes aux règles du Sudoku : lignes, colonnes et blocs 3x3.
         /// </summary>
         protected virtual void AddGenericConstraints(Context context, Solver solver, IntExpr[,] cells)
         {
