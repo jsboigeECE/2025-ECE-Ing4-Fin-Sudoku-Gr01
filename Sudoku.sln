@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.SMTZ3", "Sudoku.SMTZ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.ChocoSolvers", "Sudoku.ChocoSolvers\Sudoku.ChocoSolvers.csproj", "{3CFCAEF3-5329-4063-A3E9-17C3FAF9F9FB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.AIMASolvers", "Sudoku.AIMASolvers\Sudoku.AIMASolvers.csproj", "{34E13A0C-3971-47B2-B801-7DB41B0BD5BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{3CFCAEF3-5329-4063-A3E9-17C3FAF9F9FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CFCAEF3-5329-4063-A3E9-17C3FAF9F9FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CFCAEF3-5329-4063-A3E9-17C3FAF9F9FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34E13A0C-3971-47B2-B801-7DB41B0BD5BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34E13A0C-3971-47B2-B801-7DB41B0BD5BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34E13A0C-3971-47B2-B801-7DB41B0BD5BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34E13A0C-3971-47B2-B801-7DB41B0BD5BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
