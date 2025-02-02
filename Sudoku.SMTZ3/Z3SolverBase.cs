@@ -1,113 +1,114 @@
-using Microsoft.Z3;
+using System;
 using Sudoku.Shared;
-using System.Collections.Generic;
+using Microsoft.Z3;
 
 namespace Sudoku.SMTZ3
 {
+    /// <summary>
+    /// Classe de base qui implémente la création des variables et les contraintes communes
+    /// (domaine, lignes, colonnes, blocs 3x3).
+    /// Les solveurs spécifiques implémentent l’application des valeurs fixes via
+    /// la méthode abstraite AddInitialConstraints.
+    /// </summary>
     public abstract class Z3SolverBase : ISudokuSolver
     {
-        protected Context ctx;
-        protected Solver solver;
-        protected IntExpr[,] cells;
-
         public SudokuGrid Solve(SudokuGrid s)
         {
-            using (ctx = new Context())
+            using (var context = new Context())
             {
-                solver = ctx.MkSolver();
-                cells = new IntExpr[9, 9];
+                Solver solver = context.MkSolver();
+                IntExpr[,] cells = new IntExpr[9, 9];
 
-                InitializeCells();
-                ApplyConstraints();
-                ApplyInitialGridWithSubstitution(s);
-
-                return SolveSudoku();
-            }
-        }
-
-        /// <summary>
-        /// Initialise les variables pour chaque cellule de la grille.
-        /// </summary>
-        protected void InitializeCells()
-        {
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    cells[i, j] = (IntExpr)ctx.MkIntConst($"cell_{i}_{j}");
-                    solver.Assert(ctx.MkAnd(ctx.MkLe(ctx.MkInt(1), cells[i, j]), ctx.MkLe(cells[i, j], ctx.MkInt(9))));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Applique les contraintes de lignes, colonnes et blocs 3x3.
-        /// </summary>
-        protected void ApplyConstraints()
-        {
-            for (int i = 0; i < 9; i++)
-            {
-                solver.Assert(ctx.MkDistinct(cells[i, 0], cells[i, 1], cells[i, 2], cells[i, 3], cells[i, 4], cells[i, 5], cells[i, 6], cells[i, 7], cells[i, 8]));
-                solver.Assert(ctx.MkDistinct(cells[0, i], cells[1, i], cells[2, i], cells[3, i], cells[4, i], cells[5, i], cells[6, i], cells[7, i], cells[8, i]));
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    solver.Assert(ctx.MkDistinct(
-                        cells[i * 3, j * 3], cells[i * 3, j * 3 + 1], cells[i * 3, j * 3 + 2],
-                        cells[i * 3 + 1, j * 3], cells[i * 3 + 1, j * 3 + 1], cells[i * 3 + 1, j * 3 + 2],
-                        cells[i * 3 + 2, j * 3], cells[i * 3 + 2, j * 3 + 1], cells[i * 3 + 2, j * 3 + 2]
-                    ));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Injecte directement les valeurs fixes en utilisant l'API de substitution de Z3.
-        /// </summary>
-        protected void ApplyInitialGridWithSubstitution(SudokuGrid s)
-        {
-            List<BoolExpr> substitutions = new List<BoolExpr>();
-
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    if (s.Cells[i, j] != 0)
-                    {
-                        substitutions.Add(ctx.MkEq(cells[i, j], ctx.MkInt(s.Cells[i, j])));
-                    }
-                }
-            }
-
-            // Convertir la liste en tableau avant de l'ajouter à Z3
-            solver.Assert(substitutions.ToArray());
-        }
-
-
-        /// <summary>
-        /// Résout le Sudoku en utilisant Z3 et retourne la grille résolue.
-        /// </summary>
-        protected SudokuGrid SolveSudoku()
-        {
-            if (solver.Check() == Status.SATISFIABLE)
-            {
-                Model model = solver.Model;
-                SudokuGrid solvedGrid = new SudokuGrid();
+                // Création des variables et contrainte sur le domaine [1,9]
                 for (int i = 0; i < 9; i++)
                 {
                     for (int j = 0; j < 9; j++)
                     {
-                        solvedGrid.Cells[i, j] = ((IntNum)model.Evaluate(cells[i, j])).Int;
+                        cells[i, j] = (IntExpr)context.MkIntConst($"cell_{i}_{j}");
+                        solver.Assert(
+                            context.MkAnd(
+                                context.MkLe(context.MkInt(1), cells[i, j]),
+                                context.MkLe(cells[i, j], context.MkInt(9))
+                            )
+                        );
                     }
                 }
-                return solvedGrid;
+
+                // Application des valeurs fixes de la grille (spécifique au solver)
+                AddInitialConstraints(s, context, solver, cells);
+
+                // Ajout des contraintes génériques : lignes, colonnes et blocs 3x3
+                AddGenericConstraints(context, solver, cells);
+
+                if (solver.Check() == Status.SATISFIABLE)
+                {
+                    Model model = solver.Model;
+                    SudokuGrid solvedGrid = new SudokuGrid();
+                    for (int i = 0; i < 9; i++)
+                    {
+                        for (int j = 0; j < 9; j++)
+                        {
+                            solvedGrid.Cells[i, j] = ((IntNum)model.Evaluate(cells[i, j])).Int;
+                        }
+                    }
+                    return solvedGrid;
+                }
+                else
+                {
+                    throw new Exception("Aucune solution trouvée");
+                }
             }
-            else
+        }
+
+        /// <summary>
+        /// Permet d’appliquer les contraintes liées aux valeurs fixes de la grille.
+        /// Les classes dérivées doivent implémenter cette méthode.
+        /// </summary>
+        protected abstract void AddInitialConstraints(SudokuGrid s, Context context, Solver solver, IntExpr[,] cells);
+
+        /// <summary>
+        /// Ajoute les contraintes communes aux règles du Sudoku : lignes, colonnes, blocs.
+        /// </summary>
+        protected virtual void AddGenericConstraints(Context context, Solver solver, IntExpr[,] cells)
+        {
+            // Contrainte sur les lignes
+            for (int i = 0; i < 9; i++)
             {
-                throw new Exception("No solution found");
+                Expr[] row = new Expr[9];
+                for (int j = 0; j < 9; j++)
+                {
+                    row[j] = cells[i, j];
+                }
+                solver.Assert(context.MkDistinct(row));
+            }
+
+            // Contrainte sur les colonnes
+            for (int j = 0; j < 9; j++)
+            {
+                Expr[] col = new Expr[9];
+                for (int i = 0; i < 9; i++)
+                {
+                    col[i] = cells[i, j];
+                }
+                solver.Assert(context.MkDistinct(col));
+            }
+
+            // Contrainte sur les blocs 3x3
+            for (int blockRow = 0; blockRow < 3; blockRow++)
+            {
+                for (int blockCol = 0; blockCol < 3; blockCol++)
+                {
+                    Expr[] block = new Expr[9];
+                    int idx = 0;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            block[idx++] = cells[blockRow * 3 + i, blockCol * 3 + j];
+                        }
+                    }
+                    solver.Assert(context.MkDistinct(block));
+                }
             }
         }
     }
