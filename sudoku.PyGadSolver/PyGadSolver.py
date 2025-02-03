@@ -22,8 +22,20 @@ if 'instance' not in locals():
 fixed_indices = np.argwhere(instance > 0)
 variable_indices = np.argwhere(instance == 0)
 
-# Génération initiale améliorée avec des permutations valides
+# Vérification de validité pour éviter les mutations destructrices
+def is_valid(grid, row, col, num):
+    if num in grid[row]:
+        return False
+    if num in grid[:, col]:
+        return False
+    start_row, start_col = 3 * (row // 3), 3 * (col // 3)
+    for r in range(start_row, start_row + 3):
+        for c in range(start_col, start_col + 3):
+            if grid[r, c] == num:
+                return False
+    return True
 
+# Génération initiale améliorée basée sur la logique du backtracking
 def initialize_solution():
     grid = instance.copy()
     for row in range(9):
@@ -34,38 +46,14 @@ def initialize_solution():
             grid[row, pos] = missing_numbers[i]
     return grid[variable_indices[:, 0], variable_indices[:, 1]]
 
-# Fonction de comptage des erreurs améliorée
-
-def count_errors(grid):
-    errors = 0
-    for i in range(9):
-        errors += (9 - len(set(grid[i, :])))  # Lignes
-        errors += (9 - len(set(grid[:, i])))  # Colonnes
-    for row in range(0, 9, 3):
-        for col in range(0, 9, 3):
-            block = grid[row:row+3, col:col+3].flatten()
-            errors += (9 - len(set(block)))  # Blocs 3x3
-    return errors
-
-# Nouvelle fonction de fitness basée sur la distance à une solution valide
-
+# Fonction de fitness ajustée pour une meilleure convergence
 def fitness_function(ga_instance, solution, solution_idx):
     grid = instance.copy()
     grid[variable_indices[:, 0], variable_indices[:, 1]] = solution
-    errors = count_errors(grid)
-    return max(100 - 10 * errors, 0)  # Ajustement de la pénalisation pour améliorer la convergence
+    errors = sum([not is_valid(grid, row, col, grid[row, col]) for row, col in variable_indices])
+    return max(500 - 20 * errors, 0)
 
-# Fonction d'arrêt basée sur la stabilisation du score
-def on_generation(ga_instance):
-    best_solution, best_solution_fitness, _ = ga_instance.best_solution()
-    print(f"Génération {ga_instance.generations_completed} : Meilleur fitness = {best_solution_fitness}")
-    if best_solution_fitness >= 98:  # Seuil pour arrêter
-        check_grid = instance.copy()
-        check_grid[variable_indices[:, 0], variable_indices[:, 1]] = best_solution
-        if count_errors(check_grid) == 0:
-            return "stop"
-
-# Croisement plus structuré pour préserver la validité des solutions
+# Croisement respectant la structure correcte du Sudoku
 def structured_crossover(parents, offspring_size, ga_instance):
     offspring = []
     for _ in range(offspring_size[0]):
@@ -75,13 +63,15 @@ def structured_crossover(parents, offspring_size, ga_instance):
         offspring.append(child)
     return np.array(offspring)
 
-# Mutation améliorée avec des échanges ciblés
+# Mutation contrôlée basée sur la validité du Sudoku
 def guided_mutation(offspring, ga_instance):
-    mutation_rate = 0.05  # Réduction pour limiter la destruction des solutions
+    mutation_rate = 0.05
     for idx in range(len(offspring)):
         if np.random.rand() < mutation_rate:
             pos1, pos2 = np.random.choice(len(offspring[idx]), 2, replace=False)
-            offspring[idx][pos1], offspring[idx][pos2] = offspring[idx][pos2], offspring[idx][pos1]
+            if is_valid(instance, variable_indices[pos1][0], variable_indices[pos1][1], offspring[idx][pos2]) and \
+               is_valid(instance, variable_indices[pos2][0], variable_indices[pos2][1], offspring[idx][pos1]):
+                offspring[idx][pos1], offspring[idx][pos2] = offspring[idx][pos2], offspring[idx][pos1]
     return offspring
 
 # Exécution optimisée de l'algorithme génétique
@@ -101,7 +91,6 @@ def main():
         crossover_type=structured_crossover,
         mutation_type=guided_mutation,
         keep_parents=15,
-        on_generation=on_generation,
         initial_population=initial_population
     )
     
