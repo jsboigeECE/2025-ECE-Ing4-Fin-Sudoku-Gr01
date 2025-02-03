@@ -1,56 +1,58 @@
 using System;
+using System.IO;
 using Python.Runtime;
 using Sudoku.Shared;
 
 namespace sudoku.PyGadSolver;
 
 public class PyGadSolver : PythonSolverBase
+{
+    public override SudokuGrid Solve(SudokuGrid s)
+    {
+        using (PyModule scope = Py.CreateScope())
+        {
+            // Injectez le script de conversion
+            AddNumpyConverterScript(scope);
 
-	{
-		public override SudokuGrid Solve(SudokuGrid s)
-		{
-			//System.Diagnostics.Debugger.Break();
+            // Convertissez le tableau .NET en tableau NumPy
+            var pyCells = AsNumpyArray(s.Cells, scope);
 
-			//For some reason, the Benchmark runner won't manage to get the mutex whereas individual execution doesn't cause issues
-			//using (Py.GIL())
-			//{
-			// create a Python scope
-			using (PyModule scope = Py.CreateScope())
-			{
+            // Créer une variable Python "instance"
+            scope.Set("instance", pyCells);
 
-				// Injectez le script de conversion
-				AddNumpyConverterScript(scope);
+            // Vérification du chemin du script Python
+            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PyGadSolver.py");
+            if (!File.Exists(scriptPath))
+            {
+                throw new FileNotFoundException($"Python script not found: {scriptPath}");
+            }
 
-				// Convertissez le tableau .NET en tableau NumPy
-				var pyCells = AsNumpyArray(s.Cells, scope);
+            // Lire et exécuter le script Python
+            string code = File.ReadAllText(scriptPath);
+            scope.Exec(code);
 
-				// create a Python variable "instance"
-				scope.Set("instance", pyCells);
+            // Vérification que le script a bien retourné une solution
+            if (!scope.Contains("solved_grid"))
+            {
+                throw new Exception("Python script did not return 'solved_grid'. Check for errors.");
+            }
 
-				// run the Python script
-				string code = System.IO.File.ReadAllText("PyGadSolver.py");
-				scope.Exec(code);
+            // Récupérer la grille résolue
+            PyObject result = scope.Get("solved_grid");
 
-				PyObject result = scope.Get("solved_grid");
+            // Convertir en tableau .NET
+            var managedResult = AsManagedArray(scope, result);
 
-				// Convertissez le résultat NumPy en tableau .NET
-				var managedResult = AsManagedArray(scope, result);
+            Console.WriteLine("Python execution completed successfully.");
 
-				return new SudokuGrid() { Cells = managedResult };
-			}
-			//}
+            return new SudokuGrid() { Cells = managedResult };
+        }
+    }
 
-		}
-
-		
-
-
-		protected override void InitializePythonComponents()
-		{
-			//declare your pip packages here
-			InstallPipModule("numpy");
-            InstallPipModule("pygad");
-			base.InitializePythonComponents();
-		}
-
-	}
+    protected override void InitializePythonComponents()
+    {
+        InstallPipModule("numpy");
+        InstallPipModule("pygad");
+        base.InitializePythonComponents();
+    }
+}
