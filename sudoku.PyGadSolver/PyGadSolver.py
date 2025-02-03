@@ -1,9 +1,11 @@
 import numpy as np
 import pygad
+import random
+from copy import deepcopy
 from timeit import default_timer
 
 ###############################################
-#     Sudoku Solver Debug - PyGAD            #
+#     Sudoku Solver via Algorithme Génétique #
 ###############################################
 
 if 'instance' not in locals():
@@ -21,97 +23,94 @@ if 'instance' not in locals():
 
 fixed_indices = np.argwhere(instance > 0)
 variable_indices = np.argwhere(instance == 0)
+N = 9
 
 # Vérification de validité
 def is_valid(grid, row, col, num):
-    if num in grid[row]:
-        return False
-    if num in grid[:, col]:
+    if num in grid[row] or num in grid[:, col]:
         return False
     start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-    for r in range(start_row, start_row + 3):
-        for c in range(start_col, start_col + 3):
-            if grid[r, c] == num:
-                return False
+    if num in grid[start_row:start_row+3, start_col:start_col+3]:
+        return False
     return True
 
-# Génération initiale
-def initialize_solution():
-    grid = instance.copy()
-    for row in range(9):
-        empty_positions = np.where(grid[row] == 0)[0]
-        missing_numbers = list(set(range(1, 10)) - set(grid[row]))
-        np.random.shuffle(missing_numbers)
-        for i, pos in enumerate(empty_positions):
-            grid[row, pos] = missing_numbers[i]
-    return grid[variable_indices[:, 0], variable_indices[:, 1]]
+# Calcul de la fitness
+def fitness(grid):
+    score = 0
+    for row in grid:
+        score += len(set(row))
+    for col in grid.T:
+        score += len(set(col))
+    return score
 
-# Fonction de fitness
-def fitness_function(ga_instance, solution, solution_idx):
-    grid = instance.copy()
-    grid[variable_indices[:, 0], variable_indices[:, 1]] = solution
-    errors = sum([not is_valid(grid, row, col, grid[row, col]) for row, col in variable_indices])
-    return max(500 - 20 * errors, 0)
+# Génération initiale
+def generate_population(grid, population_size):
+    population = []
+    for _ in range(population_size):
+        new_grid = deepcopy(grid)
+        for row in range(N):
+            missing_numbers = [num for num in range(1, N+1) if num not in new_grid[row]]
+            random.shuffle(missing_numbers)
+            for col in range(N):
+                if new_grid[row][col] == 0:
+                    new_grid[row][col] = missing_numbers.pop()
+        population.append(new_grid)
+    return population
 
 # Croisement
-def structured_crossover(parents, offspring_size, ga_instance):
-    offspring = []
-    for _ in range(offspring_size[0]):
-        parent1, parent2 = np.random.choice(parents.shape[0], 2, replace=False)
-        cut1, cut2 = sorted(np.random.choice(len(parents[parent1]), 2, replace=False))
-        child = np.concatenate((parents[parent1][:cut1], parents[parent2][cut1:cut2], parents[parent1][cut2:]))
-        offspring.append(child)
-    return np.array(offspring)
+def crossover(parent1, parent2):
+    child = deepcopy(parent1)
+    for row in range(N):
+        if random.random() > 0.5:
+            child[row] = parent2[row]
+    return child
 
 # Mutation
-def guided_mutation(offspring, ga_instance):
-    mutation_rate = 0.05
-    for idx in range(len(offspring)):
-        if np.random.rand() < mutation_rate:
-            pos1, pos2 = np.random.choice(len(offspring[idx]), 2, replace=False)
-            if is_valid(instance, variable_indices[pos1][0], variable_indices[pos1][1], offspring[idx][pos2]) and \
-               is_valid(instance, variable_indices[pos2][0], variable_indices[pos2][1], offspring[idx][pos1]):
-                offspring[idx][pos1], offspring[idx][pos2] = offspring[idx][pos2], offspring[idx][pos1]
-    return offspring
+def mutate(grid, mutation_rate=0.1):
+    new_grid = deepcopy(grid)
+    for row in range(N):
+        if random.random() < mutation_rate:
+            cols = [col for col in range(N) if new_grid[row][col] == 0]
+            if len(cols) > 1:
+                col1, col2 = random.sample(cols, 2)
+                new_grid[row][col1], new_grid[row][col2] = new_grid[row][col2], new_grid[row][col1]
+    return new_grid
 
-# Exécution de l'algorithme
+# Algorithme Génétique
+def genetic_algorithm_solver(initial_grid, population_size=500, generations=3000, mutation_rate=0.1):
+    population = generate_population(initial_grid, population_size)
+    best_solution = None
+    best_fitness = 0
+    
+    for generation in range(generations):
+        population = sorted(population, key=lambda x: fitness(x), reverse=True)
+        if fitness(population[0]) > best_fitness:
+            best_fitness = fitness(population[0])
+            best_solution = population[0]
+        if best_fitness == N * 2 * N:
+            break
+        next_generation = population[:population_size//10]
+        for _ in range(population_size - population_size//10):
+            parent1, parent2 = random.sample(population[:population_size//2], 2)
+            child = crossover(parent1, parent2)
+            child = mutate(child, mutation_rate)
+            next_generation.append(child)
+        population = next_generation
+        if generation % 500 == 0:
+            print(f"Génération {generation}: Meilleure Fitness = {best_fitness}")
+    
+    return best_solution
+
+# Fonction principale
 def main():
     start = default_timer()
-    population_size = 200
-    num_generations = 3000
-    keep_parents = 50
-    initial_population = [initialize_solution() for _ in range(population_size)]
-    
-    ga_instance = pygad.GA(
-        num_generations=num_generations,
-        num_parents_mating=100,
-        fitness_func=fitness_function,
-        sol_per_pop=population_size,
-        num_genes=len(variable_indices),
-        gene_space=list(range(1, 10)),
-        parent_selection_type="tournament",
-        crossover_type=structured_crossover,
-        mutation_type=guided_mutation,
-        keep_parents=keep_parents,
-        initial_population=initial_population,
-        on_generation=log_generation
-    )
-    
-    ga_instance.run()
+    initial_grid = np.array(instance)
+    solved_grid = genetic_algorithm_solver(initial_grid)
     execution_time = default_timer() - start
-    solution, solution_fitness, _ = ga_instance.best_solution()
-    final_grid = instance.copy()
-    final_grid[variable_indices[:, 0], variable_indices[:, 1]] = solution
     
-    print(f"Fitness finale : {solution_fitness}")
-    print("Grille résolue :")
-    print(final_grid)
+    print("Grille Résolue :")
+    print(solved_grid)
     
-    return final_grid, solution_fitness, execution_time
+    return solved_grid, fitness(solved_grid), execution_time
 
-# Fonction de log à chaque génération
-def log_generation(ga_instance):
-    if ga_instance.generations_completed % 500 == 0:
-        print(f"Génération {ga_instance.generations_completed} - Meilleur fitness : {ga_instance.best_solution()[1]}")
-    
 solved_grid, best_fitness, runtime = main()
