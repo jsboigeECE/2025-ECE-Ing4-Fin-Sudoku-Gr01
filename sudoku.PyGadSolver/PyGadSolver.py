@@ -3,7 +3,7 @@ import pygad
 from timeit import default_timer
 
 ###############################################
-#     Sudoku Solver optimisé via PyGAD       #
+#     Sudoku Solver Debug - PyGAD            #
 ###############################################
 
 if 'instance' not in locals():
@@ -22,7 +22,7 @@ if 'instance' not in locals():
 fixed_indices = np.argwhere(instance > 0)
 variable_indices = np.argwhere(instance == 0)
 
-# Vérification de validité pour éviter les mutations destructrices
+# Vérification de validité
 def is_valid(grid, row, col, num):
     if num in grid[row]:
         return False
@@ -35,7 +35,7 @@ def is_valid(grid, row, col, num):
                 return False
     return True
 
-# Génération initiale améliorée basée sur la logique du backtracking
+# Génération initiale
 def initialize_solution():
     grid = instance.copy()
     for row in range(9):
@@ -46,14 +46,14 @@ def initialize_solution():
             grid[row, pos] = missing_numbers[i]
     return grid[variable_indices[:, 0], variable_indices[:, 1]]
 
-# Fonction de fitness ajustée pour une meilleure convergence
+# Fonction de fitness
 def fitness_function(ga_instance, solution, solution_idx):
     grid = instance.copy()
     grid[variable_indices[:, 0], variable_indices[:, 1]] = solution
     errors = sum([not is_valid(grid, row, col, grid[row, col]) for row, col in variable_indices])
     return max(500 - 20 * errors, 0)
 
-# Croisement respectant la structure correcte du Sudoku
+# Croisement
 def structured_crossover(parents, offspring_size, ga_instance):
     offspring = []
     for _ in range(offspring_size[0]):
@@ -63,7 +63,7 @@ def structured_crossover(parents, offspring_size, ga_instance):
         offspring.append(child)
     return np.array(offspring)
 
-# Mutation contrôlée basée sur la validité du Sudoku
+# Mutation
 def guided_mutation(offspring, ga_instance):
     mutation_rate = 0.05
     for idx in range(len(offspring)):
@@ -74,14 +74,16 @@ def guided_mutation(offspring, ga_instance):
                 offspring[idx][pos1], offspring[idx][pos2] = offspring[idx][pos2], offspring[idx][pos1]
     return offspring
 
-# Exécution optimisée de l'algorithme génétique
+# Exécution de l'algorithme
 def main():
     start = default_timer()
-    population_size = 500
+    population_size = 200
+    num_generations = 3000
+    keep_parents = 50
     initial_population = [initialize_solution() for _ in range(population_size)]
     
     ga_instance = pygad.GA(
-        num_generations=2500,
+        num_generations=num_generations,
         num_parents_mating=100,
         fitness_func=fitness_function,
         sol_per_pop=population_size,
@@ -90,8 +92,9 @@ def main():
         parent_selection_type="tournament",
         crossover_type=structured_crossover,
         mutation_type=guided_mutation,
-        keep_parents=15,
-        initial_population=initial_population
+        keep_parents=keep_parents,
+        initial_population=initial_population,
+        on_generation=log_generation
     )
     
     ga_instance.run()
@@ -99,6 +102,16 @@ def main():
     solution, solution_fitness, _ = ga_instance.best_solution()
     final_grid = instance.copy()
     final_grid[variable_indices[:, 0], variable_indices[:, 1]] = solution
+    
+    print(f"Fitness finale : {solution_fitness}")
+    print("Grille résolue :")
+    print(final_grid)
+    
     return final_grid, solution_fitness, execution_time
 
+# Fonction de log à chaque génération
+def log_generation(ga_instance):
+    if ga_instance.generations_completed % 500 == 0:
+        print(f"Génération {ga_instance.generations_completed} - Meilleur fitness : {ga_instance.best_solution()[1]}")
+    
 solved_grid, best_fitness, runtime = main()
