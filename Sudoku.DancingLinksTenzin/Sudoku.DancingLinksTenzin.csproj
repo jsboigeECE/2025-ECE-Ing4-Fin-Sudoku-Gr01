@@ -11,10 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="libyices">
-        <HintPath>lib\libyices.dll</HintPath>
-    </Reference>
-</ItemGroup>
-
+    <PackageReference Include="DlxLib" Version="1.3.0" />
+  </ItemGroup>
 
 </Project>
