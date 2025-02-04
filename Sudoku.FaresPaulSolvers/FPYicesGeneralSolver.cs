@@ -8,7 +8,6 @@ namespace Sudoku.FaresPaulSolvers
 {
     public abstract class BaseYicesSolver : ISudokuSolver
     {
-        
         public SudokuGrid Solve(SudokuGrid s)
         {
             Console.WriteLine($"🟢 Début de la résolution avec {this.GetType().Name}");
@@ -26,12 +25,6 @@ namespace Sudoku.FaresPaulSolvers
 
             Console.WriteLine("🔹 Sortie de Yices :");
             Console.WriteLine(output);
-
-            // Vérification des erreurs possibles
-            if (output.Contains("unsupported"))
-            {
-                Console.WriteLine("⚠️ Yices a retourné 'unsupported'. Vérifiez les options SMT utilisées.");
-            }
 
             // 3️⃣ Lire la solution et remplir la grille
             SudokuGrid solvedGrid = ParseSolution(output, s);
@@ -54,12 +47,58 @@ namespace Sudoku.FaresPaulSolvers
             Console.WriteLine(heuristics);
             constraints += heuristics + "\n";
 
+            // Déclaration des variables SMT
             for (int i = 0; i < 9; i++)
             {
                 for (int j = 0; j < 9; j++)
                 {
                     constraints += $"(declare-fun x{i}{j} () Int)\n";
                     constraints += $"(assert (and (>= x{i}{j} 1) (<= x{i}{j} 9)))\n";
+                }
+            }
+
+            // Contraintes : chaque ligne a des valeurs distinctes
+            for (int i = 0; i < 9; i++)
+            {
+                constraints += "(assert (distinct ";
+                for (int j = 0; j < 9; j++) constraints += $" x{i}{j}";
+                constraints += "))\n";
+            }
+
+            // Contraintes : chaque colonne a des valeurs distinctes
+            for (int j = 0; j < 9; j++)
+            {
+                constraints += "(assert (distinct ";
+                for (int i = 0; i < 9; i++) constraints += $" x{i}{j}";
+                constraints += "))\n";
+            }
+
+            // Contraintes : chaque bloc 3x3 a des valeurs distinctes
+            for (int bi = 0; bi < 3; bi++)
+            {
+                for (int bj = 0; bj < 3; bj++)
+                {
+                    constraints += "(assert (distinct ";
+                    for (int i = 0; i < 3; i++)
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            constraints += $" x{(bi * 3 + i)}{(bj * 3 + j)}";
+                        }
+                    }
+                    constraints += "))\n";
+                }
+            }
+
+            // Contraintes : respecter la grille de départ
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    if (s.Cells[i, j] != 0)
+                    {
+                        constraints += $"(assert (= x{i}{j} {s.Cells[i, j]}))\n";
+                    }
                 }
             }
 

@@ -9,4 +9,3 @@ public class YicesSolverPropagation : BaseYicesSolver
         return "(set-option :var-elim true)\n(set-option :eager-arith true)\n";
     }
 }
-
