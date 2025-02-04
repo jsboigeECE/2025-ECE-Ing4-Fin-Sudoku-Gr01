@@ -1,78 +1,56 @@
 using System;
-using System.Diagnostics;
-using System.IO;
+using Python.Runtime;
 using Sudoku.Shared;
 
-namespace Sudoku.PyGadSolver
-{
-    public class PyGadSolver : ISudokuSolver
-    {
-        public SudokuGrid Solve(SudokuGrid s)
-        {
-            string sudokuInput = ConvertGridToString(s.Cells);
-            string pythonScript = "/Users/timotheolival/Documents/2025-ECE-Ing4-Fin-Sudoku-Gr01-Timoth--Mathis-Baptiste/sudoku.PyGadSolver/PyGadSolver.py";
+namespace sudoku.PyGadSolver;
 
-            
-            ProcessStartInfo psi = new ProcessStartInfo()
-            {
-                FileName = "python3",
-                Arguments = $"{pythonScript} \"{sudokuInput}\"",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+public class PyGadSolver : PythonSolverBase
 
-            Process process = new Process()
-            {
-                StartInfo = psi
-            };
-            process.Start();
-            string result = process.StandardOutput.ReadToEnd().Trim();
+	{
+		public override SudokuGrid Solve(SudokuGrid s)
+		{
+			//System.Diagnostics.Debugger.Break();
 
-            process.WaitForExit();
+			//For some reason, the Benchmark runner won't manage to get the mutex whereas individual execution doesn't cause issues
+			//using (Py.GIL())
+			//{
+			// create a Python scope
+			using (PyModule scope = Py.CreateScope())
+			{
 
-            return ConvertStringToGrid(result);
-        }
+				// Injectez le script de conversion
+				AddNumpyConverterScript(scope);
 
-        private string ConvertGridToString(int[,] grid)
-        {
-            string result = "";
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    result += grid[i, j].ToString();
-                }
-            }
-            return result;
-        }
+				// Convertissez le tableau .NET en tableau NumPy
+				var pyCells = AsNumpyArray(s.Cells, scope);
 
-        private SudokuGrid ConvertStringToGrid(string gridString)
-{
-    if (string.IsNullOrWhiteSpace(gridString))
-    {
-        throw new Exception("Le script Python n'a retourné aucune solution valide.");
-    }
+				// create a Python variable "instance"
+				scope.Set("instance", pyCells);
 
-    if (!gridString.All(char.IsDigit))
-    {
-        throw new Exception($"La sortie du script Python contient des caractères non numériques : {gridString}");
-    }
+				// run the Python script
+				string code = System.IO.File.ReadAllText("PyGadSolver.py");
+				scope.Exec(code);
 
-    SudokuGrid grid = new SudokuGrid();
-    int[,] cells = new int[9, 9];
-    int index = 0;
-    for (int i = 0; i < 9; i++)
-    {
-        for (int j = 0; j < 9; j++)
-        {
-            cells[i, j] = int.Parse(gridString[index].ToString());
-            index++;
-        }
-    }
-    grid.Cells = cells;
-    return grid;
-}
+				PyObject result = scope.Get("solved_grid");
 
-    }
-}
+				// Convertissez le résultat NumPy en tableau .NET
+				var managedResult = AsManagedArray(scope, result);
+
+				return new SudokuGrid() { Cells = managedResult };
+			}
+			//}
+
+		}
+
+		
+
+
+		protected override void InitializePythonComponents()
+		{
+			//declare your pip packages here
+			InstallPipModule("numpy");
+            InstallPipModule("pygad");
+			base.InitializePythonComponents();
+		}
+
+	}
