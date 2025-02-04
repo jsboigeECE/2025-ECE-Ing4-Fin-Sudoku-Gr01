@@ -10,4 +10,11 @@
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="libyices">
+        <HintPath>lib\libyices.dll</HintPath>
+    </Reference>
+</ItemGroup>
+
+
 </Project>
