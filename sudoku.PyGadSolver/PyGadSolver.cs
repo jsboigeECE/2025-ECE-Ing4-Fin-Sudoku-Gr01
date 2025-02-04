@@ -1,58 +1,78 @@
 using System;
+using System.Diagnostics;
 using System.IO;
-using Python.Runtime;
 using Sudoku.Shared;
 
-namespace sudoku.PyGadSolver;
-
-public class PyGadSolver : PythonSolverBase
+namespace Sudoku.PyGadSolver
 {
-    public override SudokuGrid Solve(SudokuGrid s)
+    public class PyGadSolver : ISudokuSolver
     {
-        using (PyModule scope = Py.CreateScope())
+        public SudokuGrid Solve(SudokuGrid s)
         {
-            // Injectez le script de conversion
-            AddNumpyConverterScript(scope);
+            string sudokuInput = ConvertGridToString(s.Cells);
+            string pythonScript = "/Users/timotheolival/Documents/2025-ECE-Ing4-Fin-Sudoku-Gr01-Timoth--Mathis-Baptiste/sudoku.PyGadSolver/PyGadSolver.py";
 
-            // Convertissez le tableau .NET en tableau NumPy
-            var pyCells = AsNumpyArray(s.Cells, scope);
-
-            // Créer une variable Python "instance"
-            scope.Set("instance", pyCells);
-
-            // Vérification du chemin du script Python
-            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PyGadSolver.py");
-            if (!File.Exists(scriptPath))
+            
+            ProcessStartInfo psi = new ProcessStartInfo()
             {
-                throw new FileNotFoundException($"Python script not found: {scriptPath}");
-            }
+                FileName = "python3",
+                Arguments = $"{pythonScript} \"{sudokuInput}\"",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
-            // Lire et exécuter le script Python
-            string code = File.ReadAllText(scriptPath);
-            scope.Exec(code);
-
-            // Vérification que le script a bien retourné une solution
-            if (!scope.Contains("solved_grid"))
+            Process process = new Process()
             {
-                throw new Exception("Python script did not return 'solved_grid'. Check for errors.");
-            }
+                StartInfo = psi
+            };
+            process.Start();
+            string result = process.StandardOutput.ReadToEnd().Trim();
 
-            // Récupérer la grille résolue
-            PyObject result = scope.Get("solved_grid");
+            process.WaitForExit();
 
-            // Convertir en tableau .NET
-            var managedResult = AsManagedArray(scope, result);
-
-            Console.WriteLine("Python execution completed successfully.");
-
-            return new SudokuGrid() { Cells = managedResult };
+            return ConvertStringToGrid(result);
         }
+
+        private string ConvertGridToString(int[,] grid)
+        {
+            string result = "";
+            for (int i = 0; i < 9; i++)
+            {
+                for (int j = 0; j < 9; j++)
+                {
+                    result += grid[i, j].ToString();
+                }
+            }
+            return result;
+        }
+
+        private SudokuGrid ConvertStringToGrid(string gridString)
+{
+    if (string.IsNullOrWhiteSpace(gridString))
+    {
+        throw new Exception("Le script Python n'a retourné aucune solution valide.");
     }
 
-    protected override void InitializePythonComponents()
+    if (!gridString.All(char.IsDigit))
     {
-        InstallPipModule("numpy");
-        InstallPipModule("pygad");
-        base.InitializePythonComponents();
+        throw new Exception($"La sortie du script Python contient des caractères non numériques : {gridString}");
+    }
+
+    SudokuGrid grid = new SudokuGrid();
+    int[,] cells = new int[9, 9];
+    int index = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        for (int j = 0; j < 9; j++)
+        {
+            cells[i, j] = int.Parse(gridString[index].ToString());
+            index++;
+        }
+    }
+    grid.Cells = cells;
+    return grid;
+}
+
     }
 }
