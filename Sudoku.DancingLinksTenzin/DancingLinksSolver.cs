@@ -92,7 +92,32 @@ namespace Sudoku.DancingLinksTenzin
 
         private bool IsValidSolution(SudokuGrid grid)
         {
-            return Enumerable.Range(0, 9).All(i => IsValidSet(grid.Cells.GetRow(i)) && IsValidSet(grid.Cells.GetColumn(i)) && IsValidSet(grid.Cells.GetBox(i)));
+            return Enumerable.Range(0, 9).All(i => IsValidSet(GetRow(grid, i)) && IsValidSet(GetColumn(grid, i)) && IsValidSet(GetBox(grid, i)));
+        }
+
+        private int[] GetRow(SudokuGrid grid, int row)
+        {
+            return Enumerable.Range(0, 9).Select(col => grid.Cells[row, col]).ToArray();
+        }
+
+        private int[] GetColumn(SudokuGrid grid, int col)
+        {
+            return Enumerable.Range(0, 9).Select(row => grid.Cells[row, col]).ToArray();
+        }
+
+        private int[] GetBox(SudokuGrid grid, int boxIndex)
+        {
+            int boxRow = (boxIndex / 3) * 3;
+            int boxCol = (boxIndex % 3) * 3;
+            var values = new List<int>();
+            for (int r = 0; r < 3; r++)
+            {
+                for (int c = 0; c < 3; c++)
+                {
+                    values.Add(grid.Cells[boxRow + r, boxCol + c]);
+                }
+            }
+            return values.ToArray();
         }
 
         private bool IsValidSet(int[] numbers)
