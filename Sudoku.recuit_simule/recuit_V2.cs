@@ -14,18 +14,18 @@ namespace Sudoku.recuit_simule
             int[,] grilleBase = SudokuGridToArray(sudokuToSolve);
 
             // 2) Paramètres du recuit simulé
-            double temperatureInitiale = 2.0;
+            double temperatureInitiale = 10.0;
             double alpha = 0.995;
-            int nbIterations = 2000000;
+            int nbIterations = 200000000;
             
             // 3) Lancer l'algo de recuit simulé
-            //    On fixe un seuil de stagnation (exemple : 3000) pour le random restart
+            //    On fixe un seuil de stagnation (exemple : 3000)
             var (solutionTrouvee, coutFinal, iterationsEffectuees) = RecuitSimuleSudoku(
                 grilleBase,
                 temperatureInitiale,
                 alpha,
                 nbIterations,
-                seuilStagnation: 3000
+                seuilStagnation: 30000
             );
 
             // 4) Reconstruire un SudokuGrid depuis la solution
@@ -38,10 +38,9 @@ namespace Sudoku.recuit_simule
         }
 
         /// <summary>
-        /// Algorithme principal de recuit simulé pour Sudoku, 
+        /// Algorithme principal de recuit simulé pour Sudoku
         /// avec mécanisme de "restart" en cas de stagnation,
-        /// et arrêt immédiat quand le coût = 0.
-        /// Retourne également le nombre d'itérations effectuées.
+        /// mais uniquement si la température est inférieure à un seuil minimal.
         /// </summary>
         private (int[,], int, int) RecuitSimuleSudoku(
             int[,] grilleBase,
@@ -66,6 +65,9 @@ namespace Sudoku.recuit_simule
 
             // Variable pour suivre l'index d'itération
             int iteration = 0;
+
+            // Définition d'un seuil "température minimale"
+            double temperatureMin = 0.0000001;
 
             for (iteration = 0; iteration < nbIterations; iteration++)
             {
@@ -112,22 +114,27 @@ namespace Sudoku.recuit_simule
                     iterationsSansAmelioration++;
                 }
 
-                // Si on stagne trop longtemps, on redémarre
+                // On vérifie la stagnation
                 if (iterationsSansAmelioration > seuilStagnation)
                 {
-                    Console.WriteLine("=== Redémarrage du recuit (stagnation détectée) ===");
-                    solutionCourante = GenererSolutionInitiale(grilleBase);
-                    coutCourant = CalculerCout(solutionCourante);
-                    iterationsSansAmelioration = 0;
+                    // --> On NE redémarre QUE si T est "minimale"
+                    if (T <= temperatureMin)
+                    {
+                        Console.WriteLine("=== Redémarrage du recuit  ===");
+                        solutionCourante = GenererSolutionInitiale(grilleBase);
+                        coutCourant = CalculerCout(solutionCourante);
+                        iterationsSansAmelioration = 0;
+                    }
+                    
                 }
 
                 // Diminution de la température
                 T *= alpha;
             }
 
-            // On sort de la boucle : iteration est soit < nbIterations (si break), soit = nbIterations (si on n'a pas résolu à temps)
+            // On sort de la boucle : iteration est soit < nbIterations (si on a break),
+            // soit = nbIterations si on n'a pas résolu à temps.
             int iterationsEffectuees = iteration; 
-
             return (meilleureSolution, meilleurCout, iterationsEffectuees);
         }
 
