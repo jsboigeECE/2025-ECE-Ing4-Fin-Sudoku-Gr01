@@ -23,6 +23,7 @@
     <ProjectReference Include="..\sudoku.PyGadSolver\sudoku.PyGadSolver.csproj" />
     <ProjectReference Include="../SudokuJulien/SudokuJulien.csproj" />
     <ProjectReference Include="..\Sudoku.GabrielOscar\Sudoku.GabrielOscar.csproj" />
+    <ProjectReference Include="..\Sudoku.LinqToZ3Solvers\Sudoku.LinqToZ3Solvers.csproj" />
     <ProjectReference Include="..\Sudoku.Shared\Sudoku.Shared.csproj" />
     <ProjectReference Include="..\Sudoku.Backtracking\Sudoku.Backtracking.csproj" />
     <ProjectReference Include="..\Sudoku.SMTZ3\Sudoku.SMTZ3.csproj" />
