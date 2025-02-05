@@ -6,27 +6,12 @@ using Sudoku.Shared;
 
 namespace Sudoku.DancingLinksTenzin
 {
-    public class DancingLinksSolver : ISudokuSolver
+    public abstract class DancingLinksSolverBase : ISudokuSolver
     {
-        public SudokuGrid Solve(SudokuGrid s)
-        {
-            var (matrix, constraintsMap) = ConvertToExactCoverMatrix(s);
-            var solver = new Dlx();
-            var solution = solver.Solve(matrix, row => row, row => row).FirstOrDefault();
-            
-            if (solution != null)
-            {
-                var solvedGrid = ConvertToSudokuGrid(solution.RowIndexes, constraintsMap, s);
-                Console.WriteLine("Solution trouvée par DLX:");
-                Console.WriteLine(solvedGrid.ToString());
-                return IsValidSolution(solvedGrid) ? solvedGrid : s.CloneSudoku();
-            }
-            
-            Console.WriteLine("Aucune solution trouvée");
-            return s.CloneSudoku();
-        }
+        public abstract SudokuGrid Solve(SudokuGrid s);
+        
 
-        private (List<int[]>, Dictionary<int, (int, int, int)>) ConvertToExactCoverMatrix(SudokuGrid grid)
+        protected (List<int[]>, Dictionary<int, (int, int, int)>) ConvertToExactCoverMatrix(SudokuGrid grid)
         {
             int size = 9;
             var matrix = new List<int[]>();
@@ -55,8 +40,22 @@ namespace Sudoku.DancingLinksTenzin
             }
             return (matrix, constraintsMap);
         }
+        public SudokuGrid ConvertToSudokuGrid(IEnumerable<int> solution, Dictionary<int, (int, int, int)> constraintsMap, SudokuGrid original)
+        {
+            var solvedGrid = original.CloneSudoku();
+            foreach (var index in solution)
+            {
+                if (constraintsMap.ContainsKey(index))
+                {
+                    var (row, col, num) = constraintsMap[index];
+                    solvedGrid.Cells[row, col] = num;
+                }
+            }
+            return solvedGrid;
+        }
+    
 
-        private int[] CreateRow(int r, int c, int num)
+        protected int[] CreateRow(int r, int c, int num)
         {
             int size = 9;
             int boxSize = 3;
@@ -75,37 +74,19 @@ namespace Sudoku.DancingLinksTenzin
 
             return row;
         }
+        
 
-        private SudokuGrid ConvertToSudokuGrid(IEnumerable<int> solution, Dictionary<int, (int, int, int)> constraintsMap, SudokuGrid original)
-        {
-            var solvedGrid = original.CloneSudoku();
-            foreach (var index in solution)
-            {
-                if (constraintsMap.ContainsKey(index))
-                {
-                    var (row, col, num) = constraintsMap[index];
-                    solvedGrid.Cells[row, col] = num;
-                }
-            }
-            return solvedGrid;
-        }
-
-        private bool IsValidSolution(SudokuGrid grid)
-        {
-            return Enumerable.Range(0, 9).All(i => IsValidSet(GetRow(grid, i)) && IsValidSet(GetColumn(grid, i)) && IsValidSet(GetBox(grid, i)));
-        }
-
-        private int[] GetRow(SudokuGrid grid, int row)
+        protected int[] GetRow(SudokuGrid grid, int row)
         {
             return Enumerable.Range(0, 9).Select(col => grid.Cells[row, col]).ToArray();
         }
 
-        private int[] GetColumn(SudokuGrid grid, int col)
+        protected int[] GetColumn(SudokuGrid grid, int col)
         {
             return Enumerable.Range(0, 9).Select(row => grid.Cells[row, col]).ToArray();
         }
 
-        private int[] GetBox(SudokuGrid grid, int boxIndex)
+        protected int[] GetBox(SudokuGrid grid, int boxIndex)
         {
             int boxRow = (boxIndex / 3) * 3;
             int boxCol = (boxIndex % 3) * 3;
@@ -120,7 +101,12 @@ namespace Sudoku.DancingLinksTenzin
             return values.ToArray();
         }
 
-        private bool IsValidSet(int[] numbers)
+        protected bool IsValidSolution(SudokuGrid grid)
+        {
+            return Enumerable.Range(0, 9).All(i => IsValidSet(GetRow(grid, i)) && IsValidSet(GetColumn(grid, i)) && IsValidSet(GetBox(grid, i)));
+        }
+
+        protected bool IsValidSet(int[] numbers)
         {
             var filteredNumbers = numbers.Where(n => n > 0).ToArray();
             return filteredNumbers.Distinct().Count() == filteredNumbers.Length;
