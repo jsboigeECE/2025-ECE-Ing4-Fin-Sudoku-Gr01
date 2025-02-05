@@ -16,7 +16,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.YicesSolvers", "Sudoku.YicesSolvers\Sudoku.YicesSolvers.csproj", "{40A429AA-9ABC-4604-B808-494681B8279C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.GabrielOscar", "Sudoku.GabrielOscar\Sudoku.GabrielOscar.csproj", "{2D99BFAF-A85F-4641-B3B7-CBCCF3CC6C89}"
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.LinqToZ3Solvers", "Sudoku.LinqToZ3Solvers\Sudoku.LinqToZ3Solvers.csproj", "{D4FF8C22-5C9D-4A55-9680-797C3D47158D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.recuit_simule", "Sudoku.recuit_simule\Sudoku.recuit_simule.csproj", "{5C0CBA12-B520-4202-BB10-DF3F02677DC9}"
 EndProject
@@ -33,6 +32,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.AIMASolvers", "Sudoku.AIMASolvers\Sudoku.AIMASolvers.csproj", "{34E13A0C-3971-47B2-B801-7DB41B0BD5BD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.DancingLinksTenzin", "Sudoku.DancingLinksTenzin\Sudoku.DancingLinksTenzin.csproj", "{5D205D62-BAFE-4390-887F-A276AFD283DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphColor", "GraphColor\GraphColor.csproj", "{F1AC0FEB-3584-4BEE-BA7A-DEE4799B9F72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,6 +105,10 @@ Global
 		{D4FF8C22-5C9D-4A55-9680-797C3D47158D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4FF8C22-5C9D-4A55-9680-797C3D47158D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4FF8C22-5C9D-4A55-9680-797C3D47158D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1AC0FEB-3584-4BEE-BA7A-DEE4799B9F72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1AC0FEB-3584-4BEE-BA7A-DEE4799B9F72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1AC0FEB-3584-4BEE-BA7A-DEE4799B9F72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1AC0FEB-3584-4BEE-BA7A-DEE4799B9F72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
