@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <Reference Include="libyices">
-        <HintPath>lib\libyices.dll.a</HintPath>
+        <HintPath>lib\libyices.dll</HintPath>
     </Reference>
 </ItemGroup>
 
